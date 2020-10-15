@@ -1,3 +1,10 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_executable(fpg fpg.cc data.cc data.h fp_tree.cc fp_tree.h)
-target_link_libraries(fpg fmt)
+add_library(util data.cc data.h)
+target_link_libraries(util fmt)
+
+add_executable(apriori apriori.cc fp_tree.cc fp_tree.h)
+target_link_libraries(apriori util fmt)
+
+add_executable(fpg fpg.cc fp_tree.cc fp_tree.h)
+target_link_libraries(fpg util fmt)
