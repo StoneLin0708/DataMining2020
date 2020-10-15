@@ -98,7 +98,8 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
         }
 
         qtree.solve([&](std::vector<int> n, int f) {
-            result.push_back(std::make_pair(f, n));
+            if (f >= min_support)
+                result.push_back(std::make_pair(f, n));
         });
         // fmt::print("-------------\n", d.item2name[q]);
     }
@@ -109,10 +110,12 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2)
+    if (argc < 3)
         return 0;
     data d(argv[1]);
     fp_tree fpt(d);
+    int min_support = std::atoi(argv[2]);
+
     if (false)
         dfs(&fpt.root, [&](fp_tree::node *n) {
             fmt::print("{}:{}\n",
@@ -121,16 +124,19 @@ int main(int argc, char *argv[]) {
                            : "null",
                        n->freq);
         });
-    auto res = query(d, fpt, 3);
+    auto res = query(d, fpt, min_support);
     for (auto r : res) {
-        if (r.first < 3)
+        if (r.first < min_support)
             continue;
         fmt::print("{}:", r.first);
         for (auto i : r.second)
             fmt::print("{},", d.to_name(i));
         fmt::print("\n");
     }
+
+    /*
     for (int i = d.num_items() - 1; i >= 0; --i)
         if (d.get_freq(i) >= 3)
             fmt::print("{}:{}\n", d.get_freq(i), d.to_name(i));
+    */
 }

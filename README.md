@@ -17,7 +17,7 @@ make
 
 ### run
 
-```
-./build/fpg data/ex0.csv
+```bash
+./build/src/fpg data/ex0.csv 10
 ```
 
