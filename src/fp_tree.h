@@ -9,7 +9,7 @@ struct fp_tree {
             : item(item), parent(parent) {}
         ~node() {
             for (auto i : child)
-                free(i);
+                delete i;
         }
         const data::item item;
         node *parent;
