@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
+using fmt::print;
 using std::string;
 
 template <typename F> void dfs(fp_tree::node *root, F f) {
@@ -75,7 +76,7 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
     for (int q = 0; q < N; ++q) {
         // result.push_back(std::make_pair(d.freq[q], std::vector<int>({q})
         // ));
-        // fmt::print("----------------\nquery for {}\n\n", d.item2name[q]);
+        // print("----------------\nquery for {}\n\n", d.item2name[q]);
         patterntree qtree(q);
         for (fp_tree::node *cond_i : fpt.link[q]) {
             std::vector<fp_tree::node *> cond;
@@ -101,7 +102,7 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
             if (f >= min_support)
                 result.push_back(std::make_pair(f, n));
         });
-        // fmt::print("-------------\n", d.item2name[q]);
+        // print("-------------\n", d.item2name[q]);
     }
 
     std::sort(result.begin(), result.end(),
@@ -113,30 +114,33 @@ int main(int argc, char *argv[]) {
     if (argc < 3)
         return 0;
     data d(argv[1]);
+    print("build tree...\n");
     fp_tree fpt(d);
-    int min_support = std::atoi(argv[2]);
+    print("done\n");
+
+    int min_support = std::atof(argv[2]) * d.transactions().size();
 
     if (false)
         dfs(&fpt.root, [&](fp_tree::node *n) {
-            fmt::print("{}:{}\n",
-                       static_cast<int>(n->item) >= 0
-                           ? static_cast<std::string>(d.to_name(n->item))
-                           : "null",
-                       n->freq);
+            print("{}:{}\n",
+                  static_cast<int>(n->item) >= 0
+                      ? static_cast<std::string>(d.to_name(n->item))
+                      : "null",
+                  n->freq);
         });
     auto res = query(d, fpt, min_support);
     for (auto r : res) {
         if (r.first < min_support)
             continue;
-        fmt::print("{}:", r.first);
+        print("{}:", r.first);
         for (auto i : r.second)
-            fmt::print("{},", d.to_name(i));
-        fmt::print("\n");
+            print("{},", d.to_name(i));
+        print("\n");
     }
 
     /*
     for (int i = d.num_items() - 1; i >= 0; --i)
         if (d.get_freq(i) >= 3)
-            fmt::print("{}:{}\n", d.get_freq(i), d.to_name(i));
+            print("{}:{}\n", d.get_freq(i), d.to_name(i));
     */
 }
