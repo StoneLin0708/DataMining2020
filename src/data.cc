@@ -16,62 +16,56 @@ std::vector<std::string> split(const std::string &str, char delim) {
     return strings;
 }
 
-data::data(std::string path) {
+data::data(std::string path) : item_count(0) {
     std::ifstream data(path);
-    std::string s;
-    int item_count = 0;
     std::vector<int> freq;
-
+    std::string s;
+    // read data
     while (std::getline(data, s)) {
         auto sp = split(s, ',');
         int N = sp.size();
         std::vector<item> items;
-        for (int i = 1; i < N; ++i) {
+        for (int i = 1; i < N; ++i) { // for each item
             const auto sitem = name(sp[i]);
-            if (name2item.find(sitem) == name2item.end()) {
+            if (name2item.find(sitem) == name2item.end()) { // create name map for new item
                 freq.push_back(0);
-                item2name[static_cast<item>(item_count)] = sitem;
-                name2item[sitem] = static_cast<item>(item_count++);
+                name2item[sitem] = static_cast<item>(item_count);
+                ++item_count;
             }
-            const auto id = name2item[sitem];
+            const auto id = name2item[sitem]; // map item string to item id
             items.push_back(id);
-            ++freq[static_cast<int>(id)];
+            ++freq[static_cast<int>(id)]; // count item frequency
         }
         _transactions.push_back(items);
     }
 
+    // sort item by frequency
     std::vector<std::pair<int, item>> sorted;
-    int item_num = freq.size();
-    N = item_num;
-    for (int i = 0; i < item_num; ++i)
-        sorted.push_back(
-            std::make_pair(freq[static_cast<int>(i)], static_cast<item>(i)));
+    std::transform(freq.begin(), freq.end(), std::back_inserter(sorted),
+                   [i = 0](auto f) mutable { return std::make_pair(f, i++); });
     std::sort(sorted.begin(), sorted.end(),
               [](auto a, auto b) { return a.first > b.first; });
-    for (auto i : sorted) {
-        this->freq.push_back(i.first);
-    }
-    std::unordered_map<item, item> map2new(item_num);
-    for (int i = 0; i < item_num; ++i) {
+    // store sorted frequency
+    std::transform(sorted.begin(), sorted.end(), std::back_inserter(this->freq),
+                   [](auto i) { return i.first; });
+    // create map from unsorted id to new sorted id
+    std::unordered_map<item, item> map2new; 
+    for (int i = 0; i < item_count; ++i) {
         map2new[sorted[i].second] = i;
     }
-
+    // map all item id to new sorted id
     for (auto &t : _transactions) {
-        for (auto &i : t) {
-            i = map2new[i];
-        }
+        for (auto &i : t)
+            i = map2new.at(i);
         std::sort(t.begin(), t.end());
     }
-
-    std::unordered_map<item, name> s_i2n;
-
-    for (auto &i : name2item) {
+    // update map id and create reverse map (item id to item string)
+    for (const auto &i : name2item) {
         auto n = map2new[i.second];
         name2item[i.first] = n;
         _items.push_back(i.second);
-        s_i2n[n] = i.first;
+        item2name[n] = i.first;
     }
-    item2name = s_i2n;
 }
 
 void data::dump() {

@@ -20,12 +20,12 @@ class data {
         return _transactions;
     };
 
-    int num_items() const { return N; }
+    int num_items() const { return item_count; }
 
     void dump();
 
   private:
-    int N;
+    int item_count;
 
     std::vector<item> _items;
     std::vector<std::vector<item>> _transactions;
