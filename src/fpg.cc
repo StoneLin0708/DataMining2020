@@ -32,14 +32,12 @@ struct patterntree {
     node root;
     patterntree(int item) : root(item, nullptr){};
 
-    template <typename It> void add_pattern(It begin, It end, int freq) {
+    void add_pattern(std::vector<data::item> p, int freq) {
         node *curr = &root;
-        for (auto i = end - 1; i != begin - 1; --i) {
-            const auto new_item = (*i)->item;
-            node *child = curr->find(new_item);
-            if (child == nullptr) {
-                child = curr->add_child(new_item);
-            }
+        for (auto i : p) {
+            node *child = curr->find(i);
+            if (child == nullptr)
+                child = curr->add_child(i);
             curr = child;
         }
         curr->freq += freq;
@@ -74,27 +72,22 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
     const int N = fpt.link.size();
     std::vector<std::pair<int, std::vector<int>>> result;
     for (int q = 0; q < N; ++q) {
-        // result.push_back(std::make_pair(d.freq[q], std::vector<int>({q})
-        // ));
         // print("----------------\nquery for {}\n\n", d.item2name[q]);
         patterntree qtree(q);
         for (fp_tree::node *cond_i : fpt.link[q]) {
-            std::vector<fp_tree::node *> cond;
-            fp_tree::node *i = cond_i->parent;
-            if (i == &fpt.root)
-                continue;
-            while (i != &fpt.root) {
-                cond.push_back(i);
-                i = i->parent;
-            }
+            std::vector<data::item> cond;
+            for (auto *i = cond_i->parent; i != &fpt.root; i = i->parent)
+                cond.push_back(i->item);
+            std::reverse(cond.begin(), cond.end());
             for (int n = cond.size(); n > 0; --n) {
-                for_each_combination(cond.begin(), cond.begin() + n, cond.end(),
-                                     [&](auto b, auto e) {
-                                         if (b == e)
-                                             return false;
-                                         qtree.add_pattern(b, e, cond_i->freq);
-                                         return false;
-                                     });
+                for_each_combination(
+                    cond.begin(), cond.begin() + n, cond.end(),
+                    [&](auto b, auto e) {
+                        if (b == e)
+                            return false;
+                        qtree.add_pattern({b, e}, cond_i->freq);
+                        return false;
+                    });
             }
         }
 
