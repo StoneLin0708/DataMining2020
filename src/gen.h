@@ -37,5 +37,8 @@ auto generate_rule(std::vector<std::pair<std::vector<int>, int>> &fps,
         }
     }
 
+    std::sort(result.begin(), result.end(),
+              [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
+
     return result;
 }

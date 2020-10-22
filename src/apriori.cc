@@ -1,6 +1,7 @@
 #include "combinations.h"
 #include "data.h"
 #include "gen.h"
+#include "util.h"
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <queue>
@@ -103,36 +104,17 @@ vector<pair<vector<data::item>, int>> apriori(data &d, int min_support) {
         for (auto i : c.cmap)
             result.push_back(i);
     }
+    std::sort(result.begin(), result.end(),
+              [](auto a, auto b) { return a.second < b.second; });
     return result;
 }
 
 int main(int argc, char *argv[]) {
     if (argc < 4)
         return 0;
-    data d(argv[1]);
-    int min_support = std::round(std::atof(argv[2]) * d.transactions().size());
-    float confidence = std::atof(argv[3]);
-    auto fp = apriori(d, min_support);
-    std::sort(fp.begin(), fp.end(),
-              [](auto a, auto b) { return a.second < b.second; });
-    for (auto r : fp) {
-        print("{}:", r.second);
-        for (auto i : r.first)
-            print("{},", d.to_name(i));
-        print("\n");
-    }
 
-    auto rules = generate_rule(fp, confidence);
-    std::sort(rules.begin(), rules.end(),
-              [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
-    for (const auto &rule : rules) {
-        print("{} -> {} = {:.3} {:.3}\n", d.to_name(std::get<2>(rule)),
-              d.to_name(std::get<3>(rule)), std::get<0>(rule),
-              std::get<1>(rule) / float(d.num_trans()));
-    }
-    /*
-    for (int i = d.num_items() - 1; i >= 0; --i)
-        if (d.get_freq(i) >= min_support)
-            print("{}:{}\n", d.get_freq(i), d.to_name(i));
-    */
+    auto p = parse(argc, argv);
+    auto fp = apriori(p.dataset, p.min_support);
+    auto rules = generate_rule(fp, p.confidence);
+    dump(fp, rules, p);
 }

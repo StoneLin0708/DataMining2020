@@ -2,6 +2,7 @@
 #include "data.h"
 #include "fp_tree.h"
 #include "gen.h"
+#include "util.h"
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <queue>
@@ -68,12 +69,14 @@ struct patterntree {
     }
 };
 
-std::vector<std::pair<std::vector<int>, int>> query(data &d, fp_tree &fpt,
-                                                    int min_support) {
+auto fpg(data &d, int min_support) {
+    fp_tree fpt(d);
     const int N = fpt.link.size();
     std::vector<std::pair<std::vector<int>, int>> result;
     for (int q = 0; q < N; ++q) {
-        // print("----------------\nquery for {}\n\n", d.item2name[q]);
+        if (d.get_freq(q) < min_support)
+            continue;
+        result.push_back({{q}, d.get_freq(q)});
         patterntree qtree(q);
         for (fp_tree::node *cond_i : fpt.link[q]) {
             std::vector<data::item> cond;
@@ -96,10 +99,7 @@ std::vector<std::pair<std::vector<int>, int>> query(data &d, fp_tree &fpt,
             if (f >= min_support)
                 result.push_back({n, f});
         });
-        result.push_back({{q}, d.get_freq(q)});
-        // print("-------------\n", d.item2name[q]);
     }
-
     std::sort(result.begin(), result.end(),
               [](auto a, auto b) { return a.first > b.first; });
     return result;
@@ -108,42 +108,8 @@ std::vector<std::pair<std::vector<int>, int>> query(data &d, fp_tree &fpt,
 int main(int argc, char *argv[]) {
     if (argc < 4)
         return 0;
-    data d(argv[1]);
-    fp_tree fpt(d);
-
-    int min_support = std::round(std::atof(argv[2]) * d.transactions().size());
-    float confidence = std::atof(argv[3]);
-
-    if (false)
-        dfs(&fpt.root, [&](fp_tree::node *n) {
-            print("{}:{}\n",
-                  static_cast<int>(n->item) >= 0
-                      ? static_cast<std::string>(d.to_name(n->item))
-                      : "null",
-                  n->freq);
-        });
-    auto fp = query(d, fpt, min_support);
-    for (auto r : fp) {
-        if (r.second < min_support)
-            continue;
-        print("{}:", r.second);
-        for (auto i : r.first)
-            print("{},", d.to_name(i));
-        print("\n");
-    }
-
-    auto rules = generate_rule(fp, confidence);
-    std::sort(rules.begin(), rules.end(),
-              [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
-    for (const auto &rule : rules) {
-        print("{} -> {} = {:.3} {:.3}\n", d.to_name(std::get<2>(rule)),
-              d.to_name(std::get<3>(rule)), std::get<0>(rule),
-              std::get<1>(rule) / float(d.num_trans()));
-    }
-
-    /*
-    for (int i = d.num_items() - 1; i >= 0; --i)
-        if (d.get_freq(i) >= 3)
-            print("{}:{}\n", d.get_freq(i), d.to_name(i));
-    */
+    auto p = parse(argc, argv);
+    auto fp = fpg(p.dataset, p.min_support);
+    auto rules = generate_rule(fp, p.confidence);
+    dump(fp, rules, p);
 }
