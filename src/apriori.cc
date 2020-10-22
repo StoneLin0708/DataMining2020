@@ -95,7 +95,7 @@ vector<pair<vector<data::item>, int>> apriori(data &d, int min_support) {
     vector<pair<vector<data::item>, int>> result;
     vector<vector<data::item>> items;
     for (auto i : d.items())
-        if (d.get_freq(i) > min_support)
+        if (d.get_freq(i) >= min_support)
             items.push_back({i});
     for (int k = 1; !items.empty(); ++k) {
         candidates c(items, d, min_support);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     if (argc < 4)
         return 0;
     data d(argv[1]);
-    int min_support = std::atof(argv[2]) * d.transactions().size();
+    int min_support = std::round(std::atof(argv[2]) * d.transactions().size());
     float confidence = std::atof(argv[3]);
     auto fp = apriori(d, min_support);
     std::sort(fp.begin(), fp.end(),
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     std::sort(rules.begin(), rules.end(),
               [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
     for (const auto &rule : rules) {
-        print("{} -> {} = {:.2} {:.2}\n", d.to_name(std::get<2>(rule)),
+        print("{} -> {} = {:.3} {:.3}\n", d.to_name(std::get<2>(rule)),
               d.to_name(std::get<3>(rule)), std::get<0>(rule),
               std::get<1>(rule) / float(d.num_trans()));
     }
