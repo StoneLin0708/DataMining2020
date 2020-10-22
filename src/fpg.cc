@@ -1,6 +1,7 @@
 #include "combinations.h"
 #include "data.h"
 #include "fp_tree.h"
+#include "gen.h"
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <queue>
@@ -67,10 +68,10 @@ struct patterntree {
     }
 };
 
-std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
+std::vector<std::pair<std::vector<int>, int>> query(data &d, fp_tree &fpt,
                                                     int min_support) {
     const int N = fpt.link.size();
-    std::vector<std::pair<int, std::vector<int>>> result;
+    std::vector<std::pair<std::vector<int>, int>> result;
     for (int q = 0; q < N; ++q) {
         // print("----------------\nquery for {}\n\n", d.item2name[q]);
         patterntree qtree(q);
@@ -93,25 +94,25 @@ std::vector<std::pair<int, std::vector<int>>> query(data &d, fp_tree &fpt,
 
         qtree.solve([&](std::vector<int> n, int f) {
             if (f >= min_support)
-                result.push_back(std::make_pair(f, n));
+                result.push_back({n, f});
         });
+        result.push_back({{q}, d.get_freq(q)});
         // print("-------------\n", d.item2name[q]);
     }
 
     std::sort(result.begin(), result.end(),
-              [](auto a, auto b) { return a.first < b.first; });
+              [](auto a, auto b) { return a.first > b.first; });
     return result;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3)
+    if (argc < 4)
         return 0;
     data d(argv[1]);
-    print("build tree...\n");
     fp_tree fpt(d);
-    print("done\n");
 
-    int min_support = std::atof(argv[2]) * d.transactions().size();
+    int min_support = std::round(std::atof(argv[2]) * d.transactions().size());
+    float confidence = std::atof(argv[3]);
 
     if (false)
         dfs(&fpt.root, [&](fp_tree::node *n) {
@@ -121,14 +122,23 @@ int main(int argc, char *argv[]) {
                       : "null",
                   n->freq);
         });
-    auto res = query(d, fpt, min_support);
-    for (auto r : res) {
-        if (r.first < min_support)
+    auto fp = query(d, fpt, min_support);
+    for (auto r : fp) {
+        if (r.second < min_support)
             continue;
-        print("{}:", r.first);
-        for (auto i : r.second)
+        print("{}:", r.second);
+        for (auto i : r.first)
             print("{},", d.to_name(i));
         print("\n");
+    }
+
+    auto rules = generate_rule(fp, confidence);
+    std::sort(rules.begin(), rules.end(),
+              [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
+    for (const auto &rule : rules) {
+        print("{} -> {} = {:.3} {:.3}\n", d.to_name(std::get<2>(rule)),
+              d.to_name(std::get<3>(rule)), std::get<0>(rule),
+              std::get<1>(rule) / float(d.num_trans()));
     }
 
     /*
