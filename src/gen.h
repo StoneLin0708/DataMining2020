@@ -30,7 +30,7 @@ auto generate_rule(std::vector<std::pair<std::vector<int>, int>> &fps,
                     const float conf = sp / fpmap[A];
                     if (conf >= confidence) {
                         result.push_back(
-                            {conf, sp, std::vector<int>(e, pt.end()), A});
+                            {conf, sp, A, std::vector<int>(e, pt.end())});
                     }
                     return false;
                 });
