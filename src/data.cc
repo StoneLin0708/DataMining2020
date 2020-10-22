@@ -38,6 +38,7 @@ data::data(std::string path) : item_count(0) {
         }
         _transactions.push_back(items);
     }
+    this->trans_count = _transactions.size();
 
     // sort item by frequency
     std::vector<std::pair<int, item>> sorted;
