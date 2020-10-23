@@ -1,4 +1,6 @@
+#pragma once
 #include "data.h"
+#include "fp.h"
 #include <cmath>
 #include <fmt/format.h>
 
@@ -20,21 +22,14 @@ problem parse(int argc, char *argv[]) {
     return {d, msi, static_cast<float>(std::atof(argv[3]))};
 }
 
-void dump(const std::vector<std::pair<std::vector<int>, int>> &fp,
-          const std::vector<std::tuple<float, int, std::vector<int>,
-                                       std::vector<int>>> &rules,
+void dump(const std::vector<fp *> &fp, const std::vector<rule *> &rules,
           const problem &p) {
     using fmt::print;
-    for (auto r : fp) {
-        print("{}:", r.second);
-        for (auto i : r.first)
-            print("{},", p.dataset.to_name(i));
-        print("\n");
-    }
-
-    for (const auto &rule : rules) {
-        print("{} -> {} = {:.3} {:.3}\n", p.dataset.to_name(std::get<2>(rule)),
-              p.dataset.to_name(std::get<3>(rule)), std::get<0>(rule),
-              std::get<1>(rule) / float(p.dataset.num_trans()));
+    for (auto f : fp)
+        print("{}:{}\n", f->support, p.dataset.to_name(f->pat));
+    for (const auto &r : rules) {
+        print("{} -> {} = {:.3} {:.3}\n", p.dataset.to_name(r->A),
+              p.dataset.to_name(r->B), r->confidence,
+              r->support / float(p.dataset.num_trans()));
     }
 }

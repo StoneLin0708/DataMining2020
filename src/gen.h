@@ -1,11 +1,14 @@
+#pragma once
 #include "combinations.h"
+#include "fp.h"
+#include <fmt/format.h>
 #include <tuple>
 #include <vector>
 
-auto generate_rule(std::vector<std::pair<std::vector<int>, int>> &fps,
-                   float confidence) {
-    using pattern = std::vector<int>;
-    std::vector<std::tuple<float, int, pattern, pattern>> result;
+auto generate_rule(std::vector<fp *> &fps, float confidence) {
+    using fmt::print;
+    using pattern = fp::pattern;
+    std::vector<rule *> result;
 
     struct VecHasher {
         int operator()(const std::vector<int> &V) const {
@@ -17,20 +20,21 @@ auto generate_rule(std::vector<std::pair<std::vector<int>, int>> &fps,
         }
     };
 
-    std::unordered_map<pattern, int, VecHasher> fpmap(fps.begin(), fps.end());
+    std::unordered_map<pattern, int, VecHasher> fpmap;
+    for (auto i : fps)
+        fpmap[i->pat] = i->support;
 
     for (auto &fp : fps) {
-        float sp = fp.second;
-        auto &pt = fp.first;
+        const int sp = fp->support;
+        auto &pt = fp->pat;
         int N = pt.size();
         for (int k = 1; k < N; ++k) {
             for_each_combination(
                 pt.begin(), pt.begin() + k, pt.end(), [&](auto b, auto e) {
-                    const std::vector<int> A(b, e);
-                    const float conf = sp / fpmap[A];
+                    std::vector<int> A(b, e);
+                    const float conf = float(sp) / fpmap[A];
                     if (conf >= confidence) {
-                        result.push_back(
-                            {conf, sp, A, std::vector<int>(e, pt.end())});
+                        result.push_back(new rule{conf, sp, A, {e, pt.end()}});
                     }
                     return false;
                 });
@@ -38,7 +42,7 @@ auto generate_rule(std::vector<std::pair<std::vector<int>, int>> &fps,
     }
 
     std::sort(result.begin(), result.end(),
-              [](auto a, auto b) { return std::get<0>(a) < std::get<0>(b); });
+              [](auto a, auto b) { return a->confidence < b->confidence; });
 
     return result;
 }

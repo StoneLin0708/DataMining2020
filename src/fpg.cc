@@ -1,5 +1,6 @@
 #include "combinations.h"
 #include "data.h"
+#include "fp.h"
 #include "fp_tree.h"
 #include "gen.h"
 #include "util.h"
@@ -72,11 +73,11 @@ struct patterntree {
 auto fpg(data &d, int min_support) {
     fp_tree fpt(d);
     const int N = fpt.link.size();
-    std::vector<std::pair<std::vector<int>, int>> result;
+    std::vector<fp *> result;
     for (int q = 0; q < N; ++q) {
         if (d.get_freq(q) < min_support)
             continue;
-        result.push_back({{q}, d.get_freq(q)});
+        result.push_back(new fp{{q}, d.get_freq(q)});
         patterntree qtree(q);
         for (fp_tree::node *cond_i : fpt.link[q]) {
             std::vector<data::item> cond;
@@ -96,12 +97,12 @@ auto fpg(data &d, int min_support) {
         }
 
         qtree.solve([&](std::vector<int> n, int f) {
-            if (f >= min_support)
-                result.push_back({n, f});
+            if (f >= min_support || !min_support)
+                result.push_back(new fp{n, f});
         });
     }
     std::sort(result.begin(), result.end(),
-              [](auto a, auto b) { return a.first > b.first; });
+              [](auto a, auto b) { return a->support < b->support; });
     return result;
 }
 

@@ -92,8 +92,8 @@ struct candidates {
     }
 };
 
-vector<pair<vector<data::item>, int>> apriori(data &d, int min_support) {
-    vector<pair<vector<data::item>, int>> result;
+auto apriori(data &d, int min_support) {
+    vector<fp *> result;
     vector<vector<data::item>> items;
     for (auto i : d.items())
         if (d.get_freq(i) >= min_support)
@@ -102,10 +102,10 @@ vector<pair<vector<data::item>, int>> apriori(data &d, int min_support) {
         candidates c(items, d, min_support);
         items = c.gen_next();
         for (auto i : c.cmap)
-            result.push_back(i);
+            result.push_back(new fp{i.first, i.second});
     }
     std::sort(result.begin(), result.end(),
-              [](auto a, auto b) { return a.second < b.second; });
+              [](auto a, auto b) { return a->support < b->support; });
     return result;
 }
 
