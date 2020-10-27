@@ -1,6 +1,5 @@
 import numpy as np
 import re
-import tqdm
 from subprocess import check_output
 
 

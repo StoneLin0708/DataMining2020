@@ -3,19 +3,31 @@
 ## requirement
 
 * cmake 3
-* compiler with c++17 support
+* c++ compiler with c++17 support
 * python3
     * pandas
     * matplotlib
     * numpy
 
+## install
+
+```bash
+git clone https://github.com/StoneLin0708/DataMining2020.git
+```
+
+If you don't have cmake
+
+```bash
+pip install cmake
+```
+
 ## build
 
 ```bash
-git submodule init --update
+git submodule update --init
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 

@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 start = default_timer()
 r = check_output(['build/src/fpg', 'data/movie_data.csv',
-                  str(args.s), str(args.c), '0']).decode().split('\n')
+                  str(args.s), str(args.c)]).decode().split('\n')
 end = default_timer()
 fp, rules = parse(r)
 
