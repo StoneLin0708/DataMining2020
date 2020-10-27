@@ -112,5 +112,5 @@ int main(int argc, char *argv[]) {
     auto p = parse(argc, argv);
     auto fp = fpg(p.dataset, p.min_support);
     auto rules = generate_rule(fp, p.confidence);
-    dump(fp, rules, p);
+    if(argc == 4) dump(fp, rules, p);
 }
